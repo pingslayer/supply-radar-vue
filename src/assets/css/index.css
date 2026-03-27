@@ -1,0 +1,67 @@
+/* src/assets/css/index.css */
+body {
+  background-color: #121212;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom form inputs dark mode */
+.form-control-dark {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.form-control-dark::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1;
+}
+
+.form-control-dark:focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Sidebar styling */
+.sidebar {
+  min-height: 100vh;
+  background-color: #1a1a1a;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-link {
+  color: #adb5bd;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  display: block;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.sidebar-link:hover, .sidebar-link.router-link-active {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.sidebar-link i {
+  margin-right: 10px;
+}
