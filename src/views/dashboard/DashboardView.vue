@@ -46,7 +46,9 @@
     <!-- Disruptions Feed -->
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h4 class="text-white fw-bold mb-0">Live Global Disruptions</h4>
-      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">Latest 5 events</span>
+      <span v-if="!loadingDisruptions" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+        Page {{ currentPage }} of {{ lastPage }}
+      </span>
     </div>
     
     <div class="card bg-dark border-secondary shadow-lg glass-panel overflow-hidden">
@@ -79,6 +81,29 @@
         <i class="bi bi-shield-check fs-1 text-success mb-2 opacity-50"></i>
         <p>No active global disruptions found.</p>
       </div>
+
+      <!-- Pagination Footer -->
+      <div v-if="disruptions.length > 0 && lastPage > 1" class="card-footer bg-dark border-top border-secondary border-opacity-50 py-3 px-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline-secondary d-flex align-items-center" 
+            :disabled="currentPage === 1 || loadingDisruptions"
+            @click="fetchDisruptions(currentPage - 1)"
+          >
+            <i class="bi bi-chevron-left me-1"></i> Previous
+          </button>
+          <span class="text-secondary small">Showing page {{ currentPage }}</span>
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline-secondary d-flex align-items-center" 
+            :disabled="currentPage === lastPage || loadingDisruptions"
+            @click="fetchDisruptions(currentPage + 1)"
+          >
+            Next <i class="bi bi-chevron-right ms-1"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -93,6 +118,8 @@ const loadingMetrics = ref(true);
 
 const disruptions = ref([]);
 const loadingDisruptions = ref(true);
+const currentPage = ref(1);
+const lastPage = ref(1);
 
 const fetchMetrics = async () => {
   try {
@@ -113,12 +140,15 @@ const fetchMetrics = async () => {
   }
 };
 
-const fetchDisruptions = async () => {
+const fetchDisruptions = async (page = 1) => {
+  loadingDisruptions.value = true;
   try {
-    const res = await api.get('/disruptions');
-    // If it returns a list, slice the first 5
-    const list = res.data.data || res.data;
-    disruptions.value = Array.isArray(list) ? list.slice(0, 5) : [];
+    const res = await api.get('/disruptions', { params: { page } });
+    // Laravel paginator provides data directly in resp.data or resp.data.data
+    const responseData = res.data;
+    disruptions.value = responseData.data || [];
+    currentPage.value = responseData.current_page || 1;
+    lastPage.value = responseData.last_page || 1;
   } catch (error) {
     console.error("Failed to fetch disruptions", error);
   } finally {

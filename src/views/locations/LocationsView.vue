@@ -54,6 +54,9 @@
                 </div>
               </td>
               <td class="py-3 text-end pe-4">
+                <button class="btn btn-sm btn-outline-info border-opacity-50 rounded me-2" @click="editLocation(location)">
+                  <i class="bi bi-pencil-square me-1"></i> Edit
+                </button>
                 <button class="btn btn-sm btn-outline-danger border-opacity-50 rounded" @click="deleteLocation(location.id)" :disabled="deletingId === location.id">
                   <span v-if="deletingId === location.id" class="spinner-border spinner-border-sm me-1" role="status"></span>
                   <i v-else class="bi bi-trash3 me-1"></i> Delete
@@ -71,7 +74,10 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary glass-panel shadow-lg">
           <div class="modal-header border-bottom border-secondary border-opacity-50">
-            <h5 class="modal-title text-white fw-bold"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Add New Location</h5>
+            <h5 class="modal-title text-white fw-bold">
+              <i class="bi bi-geo-alt-fill text-primary me-2"></i> 
+              {{ editingId ? 'Edit Location' : 'Add New Location' }}
+            </h5>
             <button type="button" class="btn-close btn-close-white" @click="closeModal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
@@ -87,8 +93,8 @@
                 <input type="text" id="locIndustry" class="form-control form-control-sm form-control-dark px-3 py-2" v-model="form.industry" required placeholder="Logistics">
               </div>
               <div class="mb-3">
-                <label for="locCountry" class="form-label text-light small fw-medium mb-1">Country (2-letter code)</label>
-                <input type="text" id="locCountry" class="form-control form-control-sm form-control-dark px-3 py-2" v-model="form.country" required minlength="2" maxlength="2" placeholder="US">
+                <label for="locCountry" class="form-label text-light small fw-medium mb-1">Country (ISO3 code)</label>
+                <input type="text" id="locCountry" class="form-control form-control-sm form-control-dark px-3 py-2" v-model="form.country" required minlength="3" maxlength="3" placeholder="USA">
               </div>
               <div class="row gx-3 mb-4">
                 <div class="col-6">
@@ -104,7 +110,7 @@
                 <button type="button" class="btn btn-outline-secondary" @click="closeModal">Cancel</button>
                 <button type="submit" class="btn btn-primary ps-4 pe-4" :disabled="submitting">
                   <span v-if="submitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Save Location
+                  {{ editingId ? 'Save Changes' : 'Save Location' }}
                 </button>
               </div>
             </form>
@@ -126,6 +132,7 @@ const showModal = ref(false);
 const submitting = ref(false);
 const errorMsg = ref('');
 const deletingId = ref(null);
+const editingId = ref(null);
 
 const form = ref({
   name: '',
@@ -156,7 +163,13 @@ const submitLocation = async () => {
       longitude: parseFloat(form.value.longitude),
       country: form.value.country.toUpperCase()
     };
-    await api.post('/supply-locations', payload);
+    
+    if (editingId.value) {
+      await api.put(`/supply-locations/${editingId.value}`, payload);
+    } else {
+      await api.post('/supply-locations', payload);
+    }
+    
     closeModal();
     loading.value = true;
     await fetchLocations(); // refresh list
@@ -164,11 +177,23 @@ const submitLocation = async () => {
     if (error.response?.data?.errors) {
       errorMsg.value = Object.values(error.response.data.errors).flat().join(' ');
     } else {
-      errorMsg.value = error.response?.data?.message || 'Failed to add location.';
+      errorMsg.value = error.response?.data?.message || 'Failed to save location.';
     }
   } finally {
     submitting.value = false;
   }
+};
+
+const editLocation = (location) => {
+  editingId.value = location.id;
+  form.value = {
+    name: location.name,
+    industry: location.industry,
+    country: location.country,
+    latitude: location.latitude,
+    longitude: location.longitude
+  };
+  showModal.value = true;
 };
 
 const deleteLocation = async (id) => {
@@ -189,6 +214,7 @@ const deleteLocation = async (id) => {
 const closeModal = () => {
   showModal.value = false;
   errorMsg.value = '';
+  editingId.value = null;
   form.value = {
     name: '',
     industry: '',
